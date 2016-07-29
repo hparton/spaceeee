@@ -1,0 +1,11 @@
+{
+  "name": "spaceeeee",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "browser-sync start --server --no-notify --files '*.html, *.css, *.js'"
+  },
+  "author": "",
+  "license": "ISC"
+}
