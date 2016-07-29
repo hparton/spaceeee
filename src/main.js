@@ -1,7 +1,5 @@
 import { genLine, generatePlanetTexture } from './js/backgroundPattern'
-
-
-var background = '#251b4f'
+import { StarField } from './js/stars'
 
 var colors = {
   green: '#0dffe1',
@@ -12,7 +10,6 @@ var colors = {
 function SpaceBackground() {
   this.width = window.innerWidth;
   this.height = window.innerHeight;
-  this.background = background;
   this.sunTexture = generatePlanetTexture(600, [
     {
      offset: -40,
