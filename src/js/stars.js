@@ -40,7 +40,7 @@ StarField.prototype.init = function() {
 StarField.prototype.drawStar = function (ctx) {
 	var x = Math.random() * this.canvas.width;
 	var y = Math.random() * this.canvas.height;
-	var radius = Math.random() * 1.1;
+	var radius = Math.random() * 2;
 	var brightness = random(80, 100) / 100;
 
     // start drawing the star
