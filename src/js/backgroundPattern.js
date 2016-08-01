@@ -129,8 +129,9 @@ export const generatePlanetTexture = function(width, texture, rotate) {
 
       tCtx.restore(); // Restore the context after clipping
 
-      var imageObj = new Image();
-      imageObj.src = tCtx.canvas.toDataURL("image/png");
+      //This is failing in Firefox + Chrome ?
+      //var imageObj = new Image();
+      //imageObj.src = tCtx.canvas.toDataURL("image/png");
 
-      return imageObj;
+      return tCtx.canvas
 }
