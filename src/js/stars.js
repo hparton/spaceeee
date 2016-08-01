@@ -7,7 +7,7 @@ export const StarField = function(canvas) {
 
 StarField.prototype.init = function() {
 	// Make a new one
-  	this.el = createChildCanvas('star-field', this.parentCanvas, 2, this.background);
+  	this.el = createChildCanvas('star-field', this.parentCanvas, -3, this.background);
 
   	this.drawStarField(200)
 }

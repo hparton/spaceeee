@@ -8,7 +8,8 @@ export const createChildCanvas = function(id, parentCanvas, order, background) {
     // Make the height/width/position match the parents.
     canvas.width = parentCanvas.width;
   	canvas.height = parentCanvas.height;
-  	canvas.position = 'absolute';
+  	canvas.style.position = 'absolute';
+  	canvas.style.zIndex = order;
   	canvas.style.left = '0';
   	canvas.style.top = '0';
 

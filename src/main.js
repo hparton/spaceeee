@@ -1,5 +1,6 @@
 import { genLine, generatePlanetTexture } from './js/backgroundPattern'
 import { StarField } from './js/stars'
+import { createChildCanvas } from './js/utils';
 
 var colors = {
   pink: '#e29fc7',
@@ -7,44 +8,44 @@ var colors = {
   ice: '#a7b0d0'
 }
 
+var sunTexture = generatePlanetTexture(600, [
+  {
+   offset: -40,
+   height: 10,
+   width: 4,
+   fill: '#fbe1d9'
+  },
+  {
+   offset: 140,
+   height: 18,
+   width: 4,
+   fill: '#efbad3'
+  },
+  {
+   offset: 280,
+   height: 18,
+   width: 4,
+   fill: '#e29fc7'
+  },
+  {
+   offset: 420,
+   height: 18,
+   width: 4,
+   fill: '#ce86b5'
+  }
+], 0.9);
+
 function SpaceBackground() {
   this.width = window.innerWidth;
   this.height = window.innerHeight;
-  this.sunTexture = generatePlanetTexture(600, [
-    {
-     offset: -40,
-     height: 10,
-     width: 4,
-     fill: '#fbe1d9'
-    },
-    {
-     offset: 140,
-     height: 18,
-     width: 4,
-     fill: '#efbad3'
-    },
-    {
-     offset: 280,
-     height: 18,
-     width: 4,
-     fill: '#e29fc7'
-    },
-    {
-     offset: 420,
-     height: 18,
-     width: 4,
-     fill: '#ce86b5'
-    }
-  ], 0.9);
 
 
 
   this.init();
 
-  var starfield = new StarField(this.canvas)
-  starfield.init()
 
-  this.sun = new Sun(this.canvas.width / 6, this.canvas.height - ( this.canvas.height / 3), 150, this.sunTexture)
+
+  this.sun = new Sun(this.canvas.width / 6, this.canvas.height - ( this.canvas.height / 3), 150, sunTexture)
   this.planets = [];
 
   var planetCount = 7;
@@ -82,20 +83,41 @@ function SpaceBackground() {
 
   var self = this;
 
-  function draw(timestamp) {
-    self.ctx.clearRect(0, 0, self.canvas.width, self.canvas.height);
-    self.drawSun(self.sun)
-    self.updatePlanetPos(self.planets)
-    self.drawPlanets(self.planets)
-      requestAnimationFrame(function(timestamp) {
-        draw(timestamp)
-        meter.tick();
-      })
+  var starfield = new StarField(this.canvas)
+  starfield.init()
+
+  var sunCanvas = createChildCanvas('sun', this.canvas, -1)
+  self.drawSun(sunCanvas.ctx, self.sun)
+
+  var trajectoryCanvas = createChildCanvas('trajectory', this.canvas, -2)
+
+  for (var i = this.planets.length -1; i >= 0; i--) {
+    this.drawTrajectory(trajectoryCanvas.ctx, {
+      x: this.sun.position.x,
+      y: this.sun.position.y,
+      radius: this.sun.radius + 150 + (150 * i)
+    })
   }
 
-  requestAnimationFrame(function(timestamp) {
-    draw(timestamp)
-  })
+
+  function draw(timestamp) {
+    // Don't clear the whole page, instead we need to stop using rotate on the planets
+    // get the X/Y coords and size, then clear the space they used to occupy (including shadow)
+    // and then redraw
+
+    self.ctx.clearRect(0, 0, self.canvas.width, self.canvas.height);
+    self.updatePlanetPos(self.planets)
+    self.drawPlanets(self.planets)
+
+    requestAnimationFrame(function(timestamp) {
+      draw(timestamp)
+      meter.tick();
+    })
+  }
+
+  // requestAnimationFrame(function(timestamp) {
+  //   draw(timestamp)
+  // })
 
 }
 
@@ -107,8 +129,8 @@ SpaceBackground.prototype.init = function() {
   this.ctx.canvas.height = this.height;
 }
 
-SpaceBackground.prototype.drawSun = function(sun) {
-  this.drawCircle({
+SpaceBackground.prototype.drawSun = function(ctx, sun) {
+  drawCircle(ctx, {
     x: sun.position.x,
     y: sun.position.y,
     radius: sun.radius,
@@ -128,11 +150,6 @@ SpaceBackground.prototype.drawSun = function(sun) {
 SpaceBackground.prototype.drawPlanets = function(planets) {
 
   for (var i = planets.length -1; i >= 0; i--) {
-    this.drawTrajectory({
-        x: this.sun.position.x,
-        y: this.sun.position.y,
-        radius: this.sun.radius + 150 + (150 * i)
-      })
 
     this.ctx.save();
 
@@ -140,7 +157,7 @@ SpaceBackground.prototype.drawPlanets = function(planets) {
         // rotate the rect
       this.ctx.rotate(planets[i].angle);
 
-   this.drawCircle({
+   drawCircle(this.ctx, {
       x: planets[i].position.x,
       y: planets[i].position.y,
       radius: planets[i].radius,
@@ -153,7 +170,7 @@ SpaceBackground.prototype.drawPlanets = function(planets) {
     })
     if (planets[i].moon) {
 
-      this.drawTrajectory({
+      this.drawTrajectory(this.ctx, {
         x: planets[i].position.x,
         y: planets[i].position.y,
         radius: planets[i].radius * 1.5
@@ -165,7 +182,7 @@ SpaceBackground.prototype.drawPlanets = function(planets) {
         // rotate the rect
       this.ctx.rotate(planets[i].moon.angle);
 
-      this.drawCircle({
+      drawCircle(this.ctx, {
         x: planets[i].radius * 1.5,
         y: 0,
         radius: planets[i].moon.radius,
@@ -200,7 +217,7 @@ SpaceBackground.prototype.updatePlanetPos = function(planets) {
 }
 
 
-SpaceBackground.prototype.drawCircle = function({
+var drawCircle = function(ctx, {
   x,
   y,
   radius = 20,
@@ -212,73 +229,71 @@ SpaceBackground.prototype.drawCircle = function({
 } = {}) {
 
       if (shadow.color) {
-        this.ctx.shadowColor = shadow.color;
-        this.ctx.shadowBlur = shadow.blur;
-        this.ctx.shadowOffsetX = 0;
-        this.ctx.shadowOffsetY = 0;
+        ctx.shadowColor = shadow.color;
+        ctx.shadowBlur = shadow.blur;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
       }
 
       if (atmosphere.rings) {
         for (var i = atmosphere.rings - 1; i >= 0; i--) {
-            this.ctx.fillStyle = atmosphere.color;
-            this.ctx.globalAlpha = 0.8 - i * 0.2
-            this.ctx.beginPath();
-            this.ctx.arc(x, y, radius + (20 * i), 0, Math.PI*2, true);
-            this.ctx.fill();
-            this.ctx.closePath();
+            ctx.fillStyle = atmosphere.color;
+            ctx.globalAlpha = 0.6 - i * 0.15
+            ctx.beginPath();
+            ctx.arc(x, y, radius + (20 * i), 0, Math.PI*2, true);
+            ctx.fill();
+            ctx.closePath();
 
         };
-        this.ctx.globalAlpha = 1;
+        ctx.globalAlpha = 1;
       }
 
 
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI*2, true);
 
-
-      this.ctx.beginPath();
-      this.ctx.arc(x, y, radius, 0, Math.PI*2, true);
-
-      this.ctx.closePath();
+      ctx.closePath();
 
       if (texture) {
-        this.ctx.fillStyle = 'clear';
+        ctx.fillStyle = 'clear';
       } else {
-        this.ctx.fillStyle = background;
+        ctx.fillStyle = background;
       }
 
-      this.ctx.fill();
+      ctx.fill();
 
       if (texture) {
-        this.ctx.drawImage(texture, x - radius, y - radius, radius * 2, radius * 2);
+        ctx.drawImage(texture, x - radius, y - radius, radius * 2, radius * 2);
+
       }
 
       if (border.width) {
-        this.ctx.strokeStyle = 'white';
-        this.ctx.lineWidth = border.width;
-        this.ctx.stroke()
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = border.width;
+        ctx.stroke()
       }
 
 
      if (shadow.color) {
-      this.ctx.shadowBlur = 0;
+      ctx.shadowBlur = 0;
      }
 }
 
-SpaceBackground.prototype.drawTrajectory = function({
+SpaceBackground.prototype.drawTrajectory = function(ctx, {
   x,
   y,
   radius,
   width = 2,
   color = '#483b67',
 } = {}) {
+  ctx.strokeStyle = '#483b67';
 
-  this.ctx.strokeStyle = '#483b67';
-
-  this.ctx.lineWidth = width;
-  this.ctx.beginPath();
-  this.ctx.arc(x, y, radius, 0, Math.PI*2, true)
-  this.ctx.strokeStyle = color;
-  this.ctx.closePath();
-  this.ctx.stroke();
+  ctx.lineWidth = width;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI*2, true)
+  ctx.strokeStyle = color;
+  ctx.closePath();
+  ctx.stroke();
 }
 
 
