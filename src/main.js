@@ -45,7 +45,7 @@ function SpaceBackground() {
 
 
 
-  this.sun = new Sun(this.canvas.width / 6, this.canvas.height - ( this.canvas.height / 3), 150, sunTexture)
+  this.sun = new Sun(this.canvas.width / 6, this.canvas.height - ( this.canvas.height / 3), 145, sunTexture)
   this.planets = [];
 
   var planetCount = 7;
@@ -60,19 +60,19 @@ function SpaceBackground() {
          offset: -40,
          height: 10,
          width: 20,
-         fill: shadeColor2(background, 0.6)
+         fill: background
         },
         {
          offset: 140,
          height: 20,
          width: 20,
-         fill: shadeColor2(background, 0.8)
+         fill: shadeColor2(background, 0.2)
         },
         {
          offset: 420,
          height: 20,
          width: 20,
-         fill: shadeColor2(background, 1)
+         fill: shadeColor2(background, 0.4)
         },
       ], 1),
       Math.random() >= 0.5,
@@ -115,9 +115,9 @@ function SpaceBackground() {
     })
   }
 
-  // requestAnimationFrame(function(timestamp) {
-  //   draw(timestamp)
-  // })
+  requestAnimationFrame(function(timestamp) {
+    draw(timestamp)
+  })
 
 }
 
@@ -147,51 +147,43 @@ SpaceBackground.prototype.drawSun = function(ctx, sun) {
   })
 }
 
-SpaceBackground.prototype.drawPlanets = function(planets) {
+SpaceBackground.prototype.drawPlanets = function() {
 
-  for (var i = planets.length -1; i >= 0; i--) {
+  for (var i = this.planets.length -1; i >= 0; i--) {
+    let planet = this.planets[i];
 
     this.ctx.save();
 
       this.ctx.translate(this.sun.position.x, this.sun.position.y);
         // rotate the rect
-      this.ctx.rotate(planets[i].angle);
+      this.ctx.rotate(this.planets[i].angle);
 
-   drawCircle(this.ctx, {
-      x: planets[i].position.x,
-      y: planets[i].position.y,
-      radius: planets[i].radius,
-      background: planets[i].background,
-      shadow: {
-        color: 'rgba(247,222,226,0.55)',
-        blur: 80,
-      },
-      texture: planets[i].texture
-    })
-    if (planets[i].moon) {
+      planet.draw(this.ctx)
+
+    if (planet.moon) {
 
       this.drawTrajectory(this.ctx, {
-        x: planets[i].position.x,
-        y: planets[i].position.y,
-        radius: planets[i].radius * 1.5
+        x: planet.position.x,
+        y: planet.position.y,
+        radius: planet.radius * 1.5
       })
 
       this.ctx.save();
 
-      this.ctx.translate(planets[i].position.x, planets[i].position.y);
+      this.ctx.translate(planet.position.x, planet.position.y);
         // rotate the rect
-      this.ctx.rotate(planets[i].moon.angle);
+      this.ctx.rotate(planet.moon.angle);
 
       drawCircle(this.ctx, {
-        x: planets[i].radius * 1.5,
+        x: planet.radius * 1.5,
         y: 0,
-        radius: planets[i].moon.radius,
-        background: planets[i].moon.background,
+        radius: planet.moon.radius,
+        background: planet.moon.background,
         shadow: {
           color: 'rgba(247,222,226,0.2)',
           blur: 10,
         },
-        texture: planets[i].moon.texture
+        texture: planet.moon.texture
       })
 
       this.ctx.restore();
@@ -205,9 +197,10 @@ SpaceBackground.prototype.drawPlanets = function(planets) {
 
 SpaceBackground.prototype.updatePlanetPos = function(planets) {
   for (var i = planets.length -1; i >= 0; i--) {
-    // this.planets[i].position.y += 0.1;
     this.planets[i].position.x = this.sun.radius + 150 + (150 * i);
     this.planets[i].position.y = 0;
+
+    this.planets[i].angularSpeed = 3 / (this.planets[i].position.x);
     planets[i].angle+=planets[i].angularSpeed;
 
     if (planets[i].moon) {
@@ -223,7 +216,7 @@ var drawCircle = function(ctx, {
   radius = 20,
   shadow = {},
   atmosphere = {},
-  border = {},
+  border = false,
   background = 'grey',
   texture
 } = {}) {
@@ -264,12 +257,11 @@ var drawCircle = function(ctx, {
 
       if (texture) {
         ctx.drawImage(texture, x - radius, y - radius, radius * 2, radius * 2);
-
       }
 
-      if (border.width) {
+      if (border) {
         ctx.strokeStyle = 'white';
-        ctx.lineWidth = border.width;
+        ctx.lineWidth = 3;
         ctx.stroke()
       }
 
@@ -308,6 +300,8 @@ function Sun(x, y, radius, texture) {
   this.background = colors.orange;
 }
 
+
+
 function Planet(x, y, radius, texture, border, moon) {
   this.radius = radius;
 
@@ -317,12 +311,28 @@ function Planet(x, y, radius, texture, border, moon) {
   this.position.x = x;
   this.position.y = y;
   this.texture = texture;
+  this.border = border;
 
   if (moon) {
     this.moon = new Planet(this.position.x * 1.5, this.position.y * 1.5, this.radius / 3.5)
   }
 
   this.background = fetch_random(colors);
+}
+
+Planet.prototype.draw = function(ctx) {
+  drawCircle(ctx, {
+    x: this.position.x,
+    y: this.position.y,
+    radius: this.radius,
+    background: this.background,
+    shadow: {
+      color: 'rgba(247,222,226,0.35)',
+      blur: 80,
+    },
+    texture: this.texture,
+    border: this.border
+  })
 }
 
 function fetch_random(obj) {
@@ -343,7 +353,7 @@ function shadeColor2(color, percent) {
 var meter = new FPSMeter({
   theme: 'dark',
   heat:  1,
-  graph:   1,
+  graph:   0,
   history: 20 ,
   maxFPS: 100,
 });
