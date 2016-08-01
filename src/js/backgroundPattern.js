@@ -39,24 +39,26 @@ export const genLine = function (canvas, x, y, width, h, radius, fill) {
     var posX = currentPoint.x;
 
     // Highest and lowest points defined in the columns array.
-    var TOP = baseline + -columns[i].top
-    var BOTTOM = baseline + -columns[i].bottom
+    var colTop = baseline + -columns[i].top
+    var colBottom = baseline + -columns[i].bottom
 
-		// Draw the column _|-|_ with rounded corners.
+		//                   _
+    // Draw the column _| |
+    //                    |_ with rounded corners.
     context.quadraticCurveTo(posX, posY, posX, posY - radius);
-    context.lineTo(posX, TOP )
-    context.quadraticCurveTo(posX, TOP - radius, posX + radius, TOP - radius);
-    context.quadraticCurveTo(posX + radius * 2, TOP - radius, posX + radius * 2, TOP);
-    context.lineTo(posX + radius * 2, BOTTOM - radius)
+    context.lineTo(posX, colTop )
+    context.quadraticCurveTo(posX, colTop - radius, posX + radius, colTop - radius);
+    context.quadraticCurveTo(posX + radius * 2, colTop - radius, posX + radius * 2, colTop);
+    context.lineTo(posX + radius * 2, colBottom - radius)
 
     if (i !== loops - 1) {
     		// We don't need the little flick on the last column
-        context.quadraticCurveTo(posX + radius * 2, BOTTOM, posX + radius * 3, BOTTOM);
+        context.quadraticCurveTo(posX + radius * 2, colBottom, posX + radius * 3, colBottom);
     }
 
     // Pass through the current x offset and where the last column finished drawing.
-    currentPoint.x = posX + radius * 4;
-    currentPoint.y = BOTTOM;
+    currentPoint.x = posX + (radius * 4);
+    currentPoint.y = colBottom;
 	}
 
   // Draw another point low down to finish the shape.
@@ -106,7 +108,8 @@ export const generatePlanetTexture = function(width, texture, rotate) {
       canvasTemp.width = canvasTemp.height = width;
       tCtx.beginPath();
 
-      tCtx.arc(canvasTemp.width / 2, canvasTemp.height / 2, canvasTemp.width / 2, 0, Math.PI*2, true);
+      tCtx.arc(canvasTemp.width / 2, canvasTemp.height / 2, canvasTemp.width / 2, 0, Math.PI*2, true)
+
 
       tCtx.save(); // Save the context before clipping
       tCtx.clip(); // Clip to whatever path is on the context
@@ -124,7 +127,10 @@ export const generatePlanetTexture = function(width, texture, rotate) {
         genLine(canvasTemp, 0, step.offset, canvasTemp.width, step.height, step.width, step.fill)
       });
 
-      tCtx.restore(); // Save the context before clipping
+      tCtx.restore(); // Restore the context after clipping
 
-  return tCtx.canvas;
+      var imageObj = new Image();
+      imageObj.src = tCtx.canvas.toDataURL("image/png");
+
+      return imageObj;
 }
