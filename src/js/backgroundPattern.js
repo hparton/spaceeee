@@ -1,3 +1,15 @@
+/**
+ * Generate a line of curved columns
+ *
+ * @param {Object} canvas - The target canvas element to draw the line on.
+ * @param {integer} x - x offset to start the line at.
+ * @param {integer} y - y offset to start the line at.
+ * @param {integer} width - width of the line.
+ * @param {integer} h - Max height of the columns.
+ * @param {integer} radius - radius of each of the column corners (this determines the width of each column).
+ * @param {string} width - fill color for the row.
+ */
+
 export const genLine = function (canvas, x, y, width, h, radius, fill) {
   var context = canvas.getContext("2d");
 
@@ -5,20 +17,22 @@ export const genLine = function (canvas, x, y, width, h, radius, fill) {
   var currentPoint = startingPoint;
   var height = width;
   var baseline = y;
+
+  var steps = []
+  var columns = []
+
   // Calc how many columns we need to draw based on the container / colWidth
   var loops = Math.ceil(width / (radius * 4) + 1);
 
   // Generate all the possible steps each of the columns can have for a max/min height
-  var steps = []
-  for (var n = 0; n < h; n+=(h / 4)) {
-  	steps.push((h / 4) * n);
+  for (let i = 0; i < h; i+=(h / 4)) {
+  	steps.push((h / 4) * i);
   }
 
   // Generate the columns with a top point above the baseline and a bottom below the baseline.
   // This could be reworked to just make sure the bottom is lower than the top and the next top point
   // is higher than the last bottom.
-  var columns = []
-  for (var n = 0; n < loops; n++) {
+  for (let i = 0; i < loops; i++) {
   	columns.push({
     	top: steps[Math.floor(Math.random() * steps.length)],
       bottom: -steps[Math.floor(Math.random() * steps.length)]
@@ -110,6 +124,11 @@ export const generatePlanetTexture = function(width, texture, rotate) {
 
       tCtx.arc(canvasTemp.width / 2, canvasTemp.height / 2, canvasTemp.width / 2, 0, Math.PI*2, true)
 
+      // TODO:
+      // Replace clip with global composite operation
+      // should fix jagged lines
+      //
+      // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
 
       tCtx.save(); // Save the context before clipping
       tCtx.clip(); // Clip to whatever path is on the context
