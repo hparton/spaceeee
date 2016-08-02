@@ -15,6 +15,7 @@
     "browserify": "^13.1.0",
     "gulp": "^3.9.1",
     "gulp-notify": "^2.2.0",
+    "gulp-uglify": "^2.0.0",
     "gulp-util": "^3.0.7",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0",

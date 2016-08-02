@@ -7,6 +7,7 @@ var buffer = require('vinyl-buffer');
 var browserify = require("browserify");
 var watchify = require("watchify");
 var babelify = require("babelify");
+var uglify = require('gulp-uglify');
 
 var browserSync = require("browser-sync").create();
 
@@ -31,6 +32,18 @@ gulp.task("watch", function () {
     watchify(b, { delay: DELAY }).on("update", bundle);
     bundle();
 });
+
+gulp.task("build", function() {
+  var b = browserify({entries: [ ENTRY_FILE ] }).transform(babelify, { presets: ["es2015"] });
+
+  return b
+    .bundle()
+    .pipe(source(OUTPUT_FILE)) // gives streaming vinyl file object
+    .pipe(buffer()) // <----- convert from streaming to buffered vinyl file object
+    .pipe(uglify()) // now gulp-uglify works
+    .pipe(gulp.dest(OUTPUT_DIR + '/min'));
+
+})
 
 gulp.task("serve", function () {
     browserSync.init({
